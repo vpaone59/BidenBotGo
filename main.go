@@ -35,7 +35,6 @@ func main() {
 	}
 	logger := slog.New(slog.NewJSONHandler(w, handlerOpts))
 	slog.SetDefault(logger)
-	slog.Info("\nApplication_Environment = ")
 
 	// Bot setup
 	sess, err := discordgo.New("Bot " + DISCORD_TOKEN)
@@ -102,9 +101,12 @@ func main() {
 	}
 	defer sess.Close()
 
+	slog.Info("App Token = " + DISCORD_TOKEN)
 	slog.Info("Bot is online")
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
+
+	sess.Close()
 }

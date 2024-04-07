@@ -1,2 +1,5 @@
 .env
 *.log
+*.air
+*.air.toml
+tmp
