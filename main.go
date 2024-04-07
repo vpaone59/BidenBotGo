@@ -1,8 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"io"
 	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,14 +20,12 @@ type Config struct {
 
 // LoadConfig reads configuration from file or environment variables.
 func LoadConfig(path string) (config Config, err error) {
-	// Read file path
+
 	viper.AddConfigPath(path)
-	// set config file and path
 	viper.SetConfigName("app")
 	viper.SetConfigType("env")
-	// watching changes in app.env
 	viper.AutomaticEnv()
-	// reading the config file
+
 	err = viper.ReadInConfig()
 	if err != nil {
 		return
@@ -37,6 +36,22 @@ func LoadConfig(path string) (config Config, err error) {
 }
 
 func main() {
+	logFile := "app.log"
+	file, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		panic(err)
+	}
+
+	defer file.Close()
+
+	w := io.MultiWriter(os.Stderr, file)
+
+	handlerOpts := &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}
+	logger := slog.New(slog.NewJSONHandler(w, handlerOpts))
+	slog.SetDefault(logger)
+
 	// load app.env file data to struct
 	config, err := LoadConfig(".")
 	// handle errors
@@ -44,8 +59,8 @@ func main() {
 		log.Fatalf("can't load environment app.env: %v", err)
 	}
 
-	fmt.Printf(" -----%s----\n", "Reading Environment variables Using Viper package")
-	fmt.Printf(" %s = %v \n", "Application_Environment", config.DiscordToken)
+	slog.Info(" -----Reading Environment variables Using Viper package----\n")
+	slog.Info("\nApplication_Environment = " + config.DiscordToken)
 
 	// Bot setup
 	sess, err := discordgo.New("Bot " + config.DiscordToken)
@@ -71,7 +86,7 @@ func main() {
 	}
 	defer sess.Close()
 
-	fmt.Println("the bot is online")
+	slog.Info("Bot is online")
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
