@@ -20,7 +20,7 @@ func main() {
 	godotenv.Load() // defaults to .env file
 	DISCORD_TOKEN := os.Getenv("DISCORD_TOKEN")
 
-	logFile := "app.log"
+	logFile := "bot.log"
 	file, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
